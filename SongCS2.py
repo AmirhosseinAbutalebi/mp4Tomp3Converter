@@ -1,18 +1,16 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QThread, pyqtSignal, Qt
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from moviepy.editor import *
-import os, shutil, platform, time
-import eyed3, asyncio
-
-
+import os, shutil, platform
+import eyed3
 
 class Ui_MainWindow(object):
     currentPath = ""
     pathWin = ""
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(450, 360)
+        MainWindow.resize(450, 170)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -22,18 +20,6 @@ class Ui_MainWindow(object):
         self.lineVertical.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.lineVertical.setObjectName("lineVertical")
 
-        self.lineHConvert = QtWidgets.QFrame(self.centralwidget)
-        self.lineHConvert.setGeometry(QtCore.QRect(10, 140, 210, 20))
-        self.lineHConvert.setFrameShape(QtWidgets.QFrame.HLine)
-        self.lineHConvert.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.lineHConvert.setObjectName("lineHConvert")
-
-        self.lineHConvertsort = QtWidgets.QFrame(self.centralwidget)
-        self.lineHConvertsort.setGeometry(QtCore.QRect(245, 140, 191, 20))
-        self.lineHConvertsort.setFrameShape(QtWidgets.QFrame.HLine)
-        self.lineHConvertsort.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.lineHConvertsort.setObjectName("lineHConvertsort")
-
         self.labelConvert = QtWidgets.QLabel(self.centralwidget)
         self.labelConvert.setGeometry(QtCore.QRect(10, 10, 111, 16))
         self.labelConvert.setObjectName("labelConvert")
@@ -41,10 +27,6 @@ class Ui_MainWindow(object):
         self.labelSort = QtWidgets.QLabel(self.centralwidget)
         self.labelSort.setGeometry(QtCore.QRect(245, 10, 71, 16))
         self.labelSort.setObjectName("labelSort")
-
-        self.labelOutputConsole = QtWidgets.QLabel(self.centralwidget)
-        self.labelOutputConsole.setGeometry(QtCore.QRect(10, 160, 100, 15))
-        self.labelOutputConsole.setObjectName("labelOutputConsole")
 
         self.labelOpenDialogConvert = QtWidgets.QLabel(self.centralwidget)
         self.labelOpenDialogConvert.setGeometry(QtCore.QRect(10, 40, 195, 21))
@@ -63,10 +45,6 @@ class Ui_MainWindow(object):
         self.pushButtonOpenDialog.setGeometry(QtCore.QRect(405, 40, 31, 23))
         self.pushButtonOpenDialog.setObjectName("pushButtonOpemDialog")
         self.pushButtonOpenDialog.clicked.connect(self.useDialogSort)
-
-        self.plainTextEditShowOutput = QtWidgets.QPlainTextEdit(self.centralwidget)
-        self.plainTextEditShowOutput.setGeometry(QtCore.QRect(10, 180, 430, 151))
-        self.plainTextEditShowOutput.setObjectName("plainTextEditShowOutput")
 
         self.textEditConvert = QtWidgets.QTextEdit(self.centralwidget)
         self.textEditConvert.setGeometry(QtCore.QRect(10, 70, 215, 21))
@@ -99,7 +77,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "SongCS2"))
         self.labelConvert.setText(_translate("MainWindow", "Convert To Mp3 :"))
         self.labelSort.setText(_translate("MainWindow", "Sort Song :"))
-        self.labelOutputConsole.setText(_translate("MainWindow", "Output Console :"))
         self.labelOpenDialogConvert.setText(_translate("MainWindow", "Select File mp4 Till Convert mp3 :"))
         self.labelOpendialogSort.setText(_translate("MainWindow", "Select Folder For Sort Song:"))
         self.pushButtonDialogConvert.setText(_translate("MainWindow", "..."))
@@ -113,13 +90,22 @@ class Ui_MainWindow(object):
         nameMusic = string.replace(string[size-1], "3")
         self.worker = WorkerThread()
         self.worker.getItem(self.currentPath, nameMusic)
+        self.messageBoxWait()
         self.worker.start()
-        self.worker.finished.connect(self.messageBox)
+        self.worker.finished.connect(self.messageBoxDone)
 
-    def messageBox(self):
+    def messageBoxDone(self):
         msgBox = QMessageBox()
         msgBox.setWindowTitle("Done")
         msgBox.setText("Convert Compelete")
+        msgBox.setIcon(QMessageBox.Warning)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
+
+    def messageBoxWait(self):
+        msgBox = QMessageBox()
+        msgBox.setWindowTitle("Waiting")
+        msgBox.setText("Press Ok Till Start Converting And Waiting Till Convert Compelete \n Then You Get Message Convert Compelete.")
         msgBox.setIcon(QMessageBox.Warning)
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
