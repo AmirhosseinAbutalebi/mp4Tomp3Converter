@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from moviepy.editor import *
@@ -11,6 +11,8 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(450, 170)
+        icon = QtGui.QIcon('Song2CV.png')
+        MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -85,17 +87,25 @@ class Ui_MainWindow(object):
         self.pushButtonSort.setText(_translate("MainWindow", "Sort"))
         
     def convertMp4ToMp3(self):
-        string = self.currentPath.split("/")[-1]
-        size = len(string)
-        nameMusic = string.replace(string[size-1], "3")
-        self.worker = WorkerThread()
-        self.worker.getItem(self.currentPath, nameMusic)
-        self.messageBoxWait()
-        self.worker.start()
-        self.worker.finished.connect(self.messageBoxDone)
+        try:
+            if self.currentPath is not None:
+                
+                string = self.currentPath.split("/")[-1]
+                size = len(string)
+                nameMusic = string.replace(string[size-1], "3")
+                self.worker = WorkerThread()
+                self.worker.getItem(self.currentPath, nameMusic)
+                self.messageBoxWait()
+                self.worker.start()
+                self.worker.finished.connect(self.messageBoxDone)
+        except:
+           self.messageBoxError("Please Choose Mp4 For Convert \nNot Another Type Of Video Or Anything...") 
+            
 
     def messageBoxDone(self):
+        icon = QtGui.QIcon('Song2CV.png')
         msgBox = QMessageBox()
+        msgBox.setWindowIcon(icon)
         msgBox.setWindowTitle("Done")
         msgBox.setText("Convert Compelete")
         msgBox.setIcon(QMessageBox.Warning)
@@ -103,9 +113,21 @@ class Ui_MainWindow(object):
         msgBox.exec()
 
     def messageBoxWait(self):
+        icon = QtGui.QIcon('Song2CV.png')
         msgBox = QMessageBox()
-        msgBox.setWindowTitle("Waiting")
+        msgBox.setWindowIcon(icon)
+        msgBox.setWindowTitle("Done")
         msgBox.setText("Press Ok Till Start Converting And Waiting Till Convert Compelete \n Then You Get Message Convert Compelete.")
+        msgBox.setIcon(QMessageBox.Warning)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
+        
+    def messageBoxError(self, message):
+        icon = QtGui.QIcon('Song2CV.png')
+        msgBox = QMessageBox()
+        msgBox.setWindowIcon(icon)
+        msgBox.setWindowTitle("Error")
+        msgBox.setText(message)
         msgBox.setIcon(QMessageBox.Warning)
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
@@ -118,10 +140,17 @@ class Ui_MainWindow(object):
         file, _= QFileDialog.getOpenFileName()
         self.currentPath = file
         self.pathWin = self.currentPath.replace("/", "\\")
-        if self.currentPath:
-            if self.checkOs == "Windows":
-                self.textEditConvert.setText(self.pathWin)
-            self.textEditConvert.setText(self.currentPath)
+        mp4 = file[-3:]
+        if mp4 == "mp4":
+            if self.currentPath:
+                if self.checkOs == "Windows":
+                    self.textEditConvert.setText(self.pathWin)
+                self.textEditConvert.setText(self.currentPath)
+        else:
+            file = ""
+            self.currentPath = ""
+            self.path = ""
+            self.messageBoxError("Please Choose Mp4 For Convert \nNot Another Type Of Video Or Anything...")
 
     def useDialogSort(self):
         self.currentPath = QFileDialog.getExistingDirectory()
@@ -132,20 +161,23 @@ class Ui_MainWindow(object):
             self.textEditSort.setText(self.currentPath)
                 
     def sortSong(self):
-        pathSongFind = self.textEditSort.toPlainText()
-        for directory, dirs, files in os.walk(pathSongFind):
-            for file in files:
-                if file.endswith('.mp3' or '.wav' or '.flac' or '.m4a'):
-                    audio = eyed3.load(file)
-                    nameAudio = str(file).replace(".mp3", "")
-                    artist = audio.tag.artist
-                    if artist == None:
-                        artist = nameAudio
-                    destination = pathSongFind + "/" + str(artist)
-                    if not(os.path.exists(destination)):
-                        os.mkdir(destination)
-                    songFile = pathSongFind + "/" + file
-                    shutil.move(songFile, destination)
+        try:
+            pathSongFind = self.textEditSort.toPlainText()
+            for directory, dirs, files in os.walk(pathSongFind):
+                for file in files:
+                    if file.endswith('.mp3' or '.wav' or '.flac' or '.m4a'):
+                        audio = eyed3.load(file)
+                        nameAudio = str(file).replace(".mp3", "")
+                        artist = audio.tag.artist
+                        if artist == None:
+                            artist = nameAudio
+                        destination = pathSongFind + "/" + str(artist)
+                        if not(os.path.exists(destination)):
+                            os.mkdir(destination)
+                        songFile = pathSongFind + "/" + file
+                        shutil.move(songFile, destination)
+        except:
+            pass
 
 class WorkerThread(QThread):
     path = ""
