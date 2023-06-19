@@ -1,3 +1,5 @@
+# add needed library
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
@@ -6,8 +8,8 @@ import os, shutil, platform
 import eyed3
 
 class Ui_MainWindow(object):
-    currentPath = ""
-    pathWin = ""
+    currentPath = "" #path for save item or check for sort
+    pathWin = "" #path win
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(450, 170)
@@ -85,11 +87,14 @@ class Ui_MainWindow(object):
         self.pushButtonOpenDialog.setText(_translate("MainWindow", "..."))
         self.pushButtonConvert.setText(_translate("MainWindow", "Convert"))
         self.pushButtonSort.setText(_translate("MainWindow", "Sort"))
-        
+
+    '''
+    def for convert to mp3 and use multi thread
+    and use try except
+    '''
     def convertMp4ToMp3(self):
         try:
             if self.currentPath is not None:
-                
                 string = self.currentPath.split("/")[-1]
                 size = len(string)
                 nameMusic = string.replace(string[size-1], "3")
@@ -101,7 +106,9 @@ class Ui_MainWindow(object):
         except:
            self.messageBoxError("Please Choose Mp4 For Convert \nNot Another Type Of Video Or Anything...") 
             
-
+    '''
+    def for message box done when convert complete
+    '''
     def messageBoxDone(self):
         icon = QtGui.QIcon('Song2CV.png')
         msgBox = QMessageBox()
@@ -112,6 +119,9 @@ class Ui_MainWindow(object):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
 
+    '''
+    def for message box when start the convert
+    '''
     def messageBoxWait(self):
         icon = QtGui.QIcon('Song2CV.png')
         msgBox = QMessageBox()
@@ -121,7 +131,10 @@ class Ui_MainWindow(object):
         msgBox.setIcon(QMessageBox.Warning)
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
-        
+     
+    '''
+    def for message box when editbox is empty
+    '''   
     def messageBoxError(self, message):
         icon = QtGui.QIcon('Song2CV.png')
         msgBox = QMessageBox()
@@ -132,10 +145,12 @@ class Ui_MainWindow(object):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
 
+    # def for check os system
     def checkOs(self):
         system = platform.system()
         return system
 
+    #open dialog convert and select item mp4 for convert
     def useDialogConvert(self):
         file, _= QFileDialog.getOpenFileName()
         self.currentPath = file
@@ -151,7 +166,8 @@ class Ui_MainWindow(object):
             self.currentPath = ""
             self.path = ""
             self.messageBoxError("Please Choose Mp4 For Convert \nNot Another Type Of Video Or Anything...")
-
+            
+    #use dialog and select directory for sort
     def useDialogSort(self):
         self.currentPath = QFileDialog.getExistingDirectory()
         self.pathWin = self.currentPath.replace("/", "\\")
@@ -159,7 +175,7 @@ class Ui_MainWindow(object):
             if self.checkOs == "Windows":
                 self.textEditSort.setText(self.pathWin)
             self.textEditSort.setText(self.currentPath)
-                
+    #sort song with eyed3 and           
     def sortSong(self):
         try:
             pathSongFind = self.textEditSort.toPlainText()
@@ -178,14 +194,15 @@ class Ui_MainWindow(object):
                         shutil.move(songFile, destination)
         except:
             pass
-
+#class theard when start convert we need to dont stop and freeze program
 class WorkerThread(QThread):
     path = ""
     nameMusic = ""
+    # get item path and name music that need for convert
     def getItem(self, path, nameMusic):
         self.path = path
         self.nameMusic = nameMusic
-
+    #start convert with VideoFileClip
     def run(self):
         video = VideoFileClip(self.path)
         video.audio.write_audiofile(self.nameMusic)
